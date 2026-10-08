@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Verse & Chronology Explorer</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body data-theme="light">
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand">
+          <div class="brand-icon">✝</div>
+          <div>
+            <h1 class="brand-title">Scripture Chronos</h1>
+            <p class="brand-subtitle">Random Bible Verses • Historical Composition Dates • Multi-Dimensional Search</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Search & Filter Controls -->
+    <section class="search-section">
+      <div class="search-card">
+        <!-- Omni-Search Bar -->
+        <div class="omni-search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="omniSearchInput" 
+            class="search-input" 
+            placeholder="Search by keyword, book (e.g. John), chapter:verse (e.g. 3:16), translation, or era (e.g. 50 AD)..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="clearSearchBtn" class="btn-clear hidden" title="Clear search" aria-label="Clear Search">✕</button>
+          <button id="executeSearchBtn" class="btn btn-primary search-submit-btn">Search</button>
+        </div>
+
+        <!-- Quick Filter Pills -->
+        <div class="quick-filters">
+          <span class="filter-label">Quick Filters:</span>
+          <div class="pill-group">
+            <button class="pill active" data-testament="">All</button>
+            <button class="pill" data-testament="Old Testament">Old Testament</button>
+            <button class="pill" data-testament="New Testament">New Testament</button>
+            <span class="pill-divider">|</span>
+            <button class="pill" data-translation="">All Translations</button>
+            <button class="pill" data-translation="KJV">KJV</button>
+            <button class="pill" data-translation="WEB">WEB</button>
+          </div>
+          <button id="toggleAdvancedFiltersBtn" class="btn-toggle-filters">
+            <span>⚙️ Advanced Filters</span>
+            <span class="chevron-icon">▼</span>
+          </button>
+        </div>
+
+        <!-- Advanced Filter Drawer -->
+        <div id="advancedFilterDrawer" class="advanced-filter-drawer hidden">
+          <div class="filter-grid">
+            <div class="filter-group">
+              <label for="filterBook">Book</label>
+              <select id="filterBook" class="form-select">
+                <option value="">Any Book (All 66 Books)</option>
+              </select>
+            </div>
+
+            <div class="filter-group filter-small">
+              <label for="filterChapter">Chapter</label>
+              <input type="number" id="filterChapter" class="form-input" placeholder="e.g. 3" min="1">
+            </div>
+
+            <div class="filter-group filter-small">
+              <label for="filterVerse">Verse</label>
+              <input type="number" id="filterVerse" class="form-input" placeholder="e.g. 16" min="1">
+            </div>
+
+            <div class="filter-group">
+              <label for="filterTranslation">Translation</label>
+              <select id="filterTranslation" class="form-select">
+                <option value="">Any Translation</option>
+                <option value="KJV">King James Version (KJV)</option>
+                <option value="WEB">World English Bible (WEB)</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterEra">Historical Era / Period</label>
+              <select id="filterEra" class="form-select">
+                <option value="">Any Era</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filterTimeQuery">Approx. Date Written</label>
+              <input type="text" id="filterTimeQuery" class="form-input" placeholder="e.g. 50 AD, 1400 BC, 1st Century">
+            </div>
+          </div>
+
+          <div class="drawer-actions">
+            <button id="applyFiltersBtn" class="btn btn-secondary">Apply Filters</button>
+            <button id="resetFiltersBtn" class="btn btn-text">Reset All Filters</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Search Results Banner (Shown when searching) -->
+      <div id="resultsBanner" class="results-banner hidden">
+        <div class="results-info">
+          <span id="resultsCountText">Found 0 matching verses</span>
+        </div>
+        <div class="results-actions">
+          <button id="viewFeaturedBtn" class="btn btn-sm btn-outline">Back to Random View</button>
+        </div>
+      </div>
+
+      <!-- Featured / Active Random Verse Card -->
+      <section id="featuredVerseSection" class="verse-section">
+        <div class="card verse-card" id="verseDisplayCard">
+          <!-- Card Header / Meta Badges -->
+          <div class="verse-card-header">
+            <div class="badge-cluster">
+              <span class="badge badge-reference" id="verseReference">Loading...</span>
+              <span class="badge badge-translation" id="verseTranslation">--</span>
+              <span class="badge badge-testament" id="verseTestament">--</span>
+            </div>
+            <div class="verse-actions-top">
+              <button id="copyVerseBtn" class="btn-action-icon" title="Copy verse and full reference to clipboard" aria-label="Copy verse">
+                <span class="icon">📋</span>
+                <span class="btn-text">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Scripture Text Block -->
+          <div class="verse-body">
+            <blockquote class="verse-text" id="verseText">
+              "Seeking inspiration from the scriptures..."
+            </blockquote>
+          </div>
+
+          <!-- Chronology & Historical Context Details -->
+          <div class="chronology-card">
+            <div class="chronology-header">
+              <span class="chronology-title">⏳ Historical Context & Chronology</span>
+            </div>
+            <div class="chronology-grid">
+              <div class="chronology-item">
+                <span class="label">Approximate Time Written:</span>
+                <span class="value highlight-date" id="verseApproxDate">--</span>
+              </div>
+              <div class="chronology-item">
+                <span class="label">Historical Era:</span>
+                <span class="value" id="verseEra">--</span>
+              </div>
+              <div class="chronology-item">
+                <span class="label">Traditional Author:</span>
+                <span class="value" id="verseAuthor">--</span>
+              </div>
+              <div class="chronology-item">
+                <span class="label">Literary Category:</span>
+                <span class="value" id="verseCategory">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Footer Controls -->
+          <div class="verse-card-footer">
+            <div class="nav-controls">
+              <button id="prevVerseBtn" class="btn btn-outline" title="Previous verse in sequence">
+                ← Prev Verse
+              </button>
+              <button id="nextVerseBtn" class="btn btn-outline" title="Next verse in sequence">
+                Next Verse →
+              </button>
+            </div>
+
+            <button id="newRandomBtn" class="btn btn-primary btn-lg pulse-hover">
+              <span class="dice-icon">🎲</span> Get Random Verse
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search Results List (Shown when searching) -->
+      <section id="searchResultsSection" class="search-results-section hidden">
+        <div id="resultsList" class="results-grid">
+          <!-- Dynamically populated verse items -->
+        </div>
+        <div id="emptyResultsMessage" class="empty-results hidden">
+          <div class="empty-icon">📖</div>
+          <h3>No matching verses found</h3>
+          <p>Try searching for different keywords, adjusting your book or chapter, or clearing the historical era filters.</p>
+          <button id="resetFromEmptyBtn" class="btn btn-secondary">Clear Filters & Return to Random</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast Notification for Copy -->
+    <div id="toastNotification" class="toast hidden">
+      <span class="toast-icon">✓</span>
+      <span id="toastMessage">Verse copied to clipboard!</span>
+    </div>
+
+    <!-- Keyboard Shortcuts Legend -->
+    <footer class="app-footer">
+      <div class="shortcuts-legend">
+        <span>Keyboard shortcuts:</span>
+        <kbd>Space</kbd> New Random Verse
+        <span class="sep">•</span>
+        <kbd>/</kbd> Focus Search
+        <span class="sep">•</span>
+        <kbd>Esc</kbd> Clear Search
+      </div>
+      <p class="copyright-text">Scripture texts from King James Version (KJV) and World English Bible (WEB) — Public Domain.</p>
+    </footer>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
