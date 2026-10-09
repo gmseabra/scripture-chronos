@@ -438,6 +438,20 @@ body {
   border-color: var(--accent-gold);
 }
 
+.btn:disabled,
+.btn[disabled],
+.btn-outline:disabled,
+.btn-primary:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none !important;
+  transform: none !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+  background: transparent !important;
+}
+
 .btn-text {
   background: transparent;
   color: var(--text-secondary);

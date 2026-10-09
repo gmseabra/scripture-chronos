@@ -10,6 +10,8 @@
   // --- APPLICATION STATE ---
   const state = {
     currentVerse: null,
+    verseHistory: [],       // History stack of viewed verse objects
+    historyIndex: -1,       // Current position in the history stack
     metadata: null,
     activeFilters: {
       q: '',
@@ -182,8 +184,22 @@
     }
   }
 
-  function renderFeaturedVerse(verse) {
+  function renderFeaturedVerse(verse, addToHistory = true) {
     state.currentVerse = verse;
+
+    if (addToHistory) {
+      // If user had browsed backward in history and views a new verse, truncate forward history
+      if (state.historyIndex < state.verseHistory.length - 1) {
+        state.verseHistory = state.verseHistory.slice(0, state.historyIndex + 1);
+      }
+
+      // Avoid adding duplicate if identical to currently viewed verse in history
+      const currentInHistory = state.verseHistory[state.historyIndex];
+      if (!currentInHistory || currentInHistory.id !== verse.id || currentInHistory.translation !== verse.translation) {
+        state.verseHistory.push(verse);
+        state.historyIndex = state.verseHistory.length - 1;
+      }
+    }
 
     // Badges & Reference
     elements.verseReference.textContent = `📖 ${verse.reference}`;
@@ -199,11 +215,52 @@
     elements.verseAuthor.textContent = verse.author || 'Biblical Author';
     elements.verseCategory.textContent = verse.category;
 
-    // Navigation buttons
-    elements.prevVerseBtn.disabled = !verse.prev_id;
-    elements.nextVerseBtn.disabled = !verse.next_id;
+    // Update history navigation button states (enabled vs. greyed-out)
+    updateHistoryButtons();
 
     elements.verseDisplayCard.classList.add('fade-in');
+  }
+
+  function updateHistoryButtons() {
+    const hasPrev = state.historyIndex > 0;
+    const hasNext = state.historyIndex >= 0 && state.historyIndex < state.verseHistory.length - 1;
+
+    elements.prevVerseBtn.disabled = !hasPrev;
+    elements.nextVerseBtn.disabled = !hasNext;
+
+    if (hasPrev) {
+      const prevVerse = state.verseHistory[state.historyIndex - 1];
+      elements.prevVerseBtn.title = `Previous verse in history (${prevVerse.reference})`;
+    } else {
+      elements.prevVerseBtn.title = 'No previous verse in history';
+    }
+
+    if (hasNext) {
+      const nextVerse = state.verseHistory[state.historyIndex + 1];
+      elements.nextVerseBtn.title = `Next verse in history (${nextVerse.reference})`;
+    } else {
+      elements.nextVerseBtn.title = 'No next verse in history';
+    }
+  }
+
+  function showPreviousVerse() {
+    if (state.historyIndex > 0) {
+      elements.verseDisplayCard.classList.remove('fade-in');
+      void elements.verseDisplayCard.offsetWidth; // Trigger reflow for animation
+      state.historyIndex--;
+      const prevVerse = state.verseHistory[state.historyIndex];
+      renderFeaturedVerse(prevVerse, false);
+    }
+  }
+
+  function showNextVerse() {
+    if (state.historyIndex >= 0 && state.historyIndex < state.verseHistory.length - 1) {
+      elements.verseDisplayCard.classList.remove('fade-in');
+      void elements.verseDisplayCard.offsetWidth; // Trigger reflow for animation
+      state.historyIndex++;
+      const nextVerse = state.verseHistory[state.historyIndex];
+      renderFeaturedVerse(nextVerse, false);
+    }
   }
 
   // --- SPECIFIC VERSE BY ID ---
@@ -418,18 +475,9 @@
     // Copy verse button
     elements.copyVerseBtn.addEventListener('click', copyCurrentVerse);
 
-    // Prev / Next Verse Navigation
-    elements.prevVerseBtn.addEventListener('click', () => {
-      if (state.currentVerse && state.currentVerse.prev_id) {
-        fetchVerseById(state.currentVerse.prev_id);
-      }
-    });
-
-    elements.nextVerseBtn.addEventListener('click', () => {
-      if (state.currentVerse && state.currentVerse.next_id) {
-        fetchVerseById(state.currentVerse.next_id);
-      }
-    });
+    // Prev / Next Verse Navigation through viewed history
+    elements.prevVerseBtn.addEventListener('click', showPreviousVerse);
+    elements.nextVerseBtn.addEventListener('click', showNextVerse);
 
     // Omni-Search Input Events
     elements.omniSearchInput.addEventListener('input', (e) => {
@@ -521,6 +569,22 @@
       if (e.code === 'Space' && !isInput) {
         e.preventDefault();
         fetchRandomVerse();
+      }
+
+      // 'ArrowLeft' navigates to previous verse in history
+      if (e.key === 'ArrowLeft' && !isInput && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (state.historyIndex > 0) {
+          e.preventDefault();
+          showPreviousVerse();
+        }
+      }
+
+      // 'ArrowRight' navigates to next verse in history
+      if (e.key === 'ArrowRight' && !isInput && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (state.historyIndex >= 0 && state.historyIndex < state.verseHistory.length - 1) {
+          e.preventDefault();
+          showNextVerse();
+        }
       }
 
       // '/' focuses omni-search

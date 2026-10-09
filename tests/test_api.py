@@ -30,6 +30,8 @@ class BibleAppTestCase(unittest.TestCase):
         html = response.data.decode("utf-8")
         self.assertIn("Scripture Chronos", html)
         self.assertIn("Historical Context & Chronology", html)
+        self.assertIn('id="prevVerseBtn"', html)
+        self.assertIn('id="nextVerseBtn"', html)
 
     def test_random_verse_structure(self):
         """Verify /api/random returns all requested metadata fields."""
